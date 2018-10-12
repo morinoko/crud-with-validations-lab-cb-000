@@ -1,20 +1,18 @@
 class Song < ActiveRecord::Base
-  include ActiveModel::Validations
-  
-  validates_with ReleaseYearPresenceValidator
-  validates :title, presence: true
-  validates :release_year, numericality: { less_than_or_equal_to: Time.now.year, allow_nil: true }
+  validates :title, presence: true 
+  validates :title, uniqueness: { 
+    scope: [:release_year, :artist_name],
+    message: "cannot be duplicated by same artist in same year"
+  }
   validates :artist_name, presence: true
   validates :genre, presence: true
-  validate :song_uniqueness
   
-  private
+  with_options if: :released? do |song|
+    song.validates :release_year, presence: true
+    song.validates :release_year, numericality: { less_than_or_equal_to: Time.now.year }
+  end
   
-  def song_uniqueness
-    song = Song.find_by(title: title, release_year: release_year, artist_name: artist_name)
-    
-    if song && song.id != self.id
-      errors.add(:title, "- Same song cannot be released by the same artist in the same year")
-    end
+  def released?
+    self.released
   end
 end
