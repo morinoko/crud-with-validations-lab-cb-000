@@ -1,7 +1,7 @@
 class ReleaseYearPresenceValidator < ActiveModel::Validator
   def validate(record)
-    if record.released
-      validates presence: true, message: "%{attribute} cannot be blank if song is released"
+    if record.released && record.release_year.nil?
+       record.errors[:release_year] << "cannot be blank if song is released"
     end
   end
 end
